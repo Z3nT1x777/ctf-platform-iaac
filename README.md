@@ -1,2 +1,2 @@
-# ctf-plateform-iaac
+# ctf-platform-iaac
 Self-hosted CTF platform with Infrastructure as Code - M1 Cybersecurity Project
