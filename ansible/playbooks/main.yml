@@ -1,0 +1,61 @@
+---
+- name: Deploy CTF Platform
+  hosts: ctf_servers
+  become: yes
+  vars_files:
+    - ../vars/main.yml
+  tasks:
+    - name: Print welcome message
+      debug:
+        msg: "🚀 Démarrage du déploiement CTF Platform..."
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      apt:
+        name:
+          - python3-pip
+          - python3-docker
+          - git
+        state: present
+
+    - name: Create project directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - /opt/ctf
+        - /opt/ctf/ctfd
+        - /opt/ctf/gitlab
+        - /opt/ctf/monitoring
+
+    - name: Copy docker-compose files
+      template:
+        src: "../templates/docker-compose-{{ item }}.yml.j2"
+        dest: "/opt/ctf/{{ item }}/docker-compose.yml"
+      loop:
+        - ctfd
+        - gitlab
+        - monitoring
+
+    - name: Start CTFd
+      community.docker.docker_compose:
+        project_src: /opt/ctf/ctfd
+        state: present
+
+    - name: Wait for CTFd to be ready
+      uri:
+        url: "http://localhost:80"
+        status_code: 200
+      register: result
+      until: result.status == 200
+      retries: 30
+      delay: 10
+
+    - name: Success message
+      debug:
+        msg: "✅ CTF Platform déployée avec succès sur http://{{ ansible_default_ipv4.address }}"

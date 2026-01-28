@@ -1,0 +1,9 @@
+---
+ctfd_version: "latest"
+ctfd_port: 80
+ctfd_db_port: 3306
+gitlab_version: "latest"
+gitlab_http_port: 8080
+gitlab_ssh_port: 2222
+prometheus_port: 9090
+grafana_port: 3000

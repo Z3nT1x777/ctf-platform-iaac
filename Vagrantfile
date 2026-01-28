@@ -1,0 +1,53 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  # Ubuntu 22.04 LTS
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.hostname = "ctf-platform"
+
+  # Network: IP statique pour accès depuis Windows
+  config.vm.network "private_network", ip: "192.168.56.10"
+  # Port forwarding (backup si private_network échoue)
+  config.vm.network "forwarded_port", guest: 80, host: 8000   # CTFd
+  config.vm.network "forwarded_port", guest: 8080, host: 8080 # GitLab
+  config.vm.network "forwarded_port", guest: 3000, host: 3000 # Grafana
+
+  # Resources
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "ctf-platform-vm"
+    vb.memory = "8192"  # 8 Go RAM
+    vb.cpus = 4
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+  end
+
+  # Shared folder
+  config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
+
+  # Provisioning initial (installation de base)
+  config.vm.provision "shell", inline: <<-SHELL
+    # Update system
+    apt-get update
+    apt-get upgrade -y
+
+    # Install essentials
+    apt-get install -y git curl wget vim net-tools
+
+    # Install Docker
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh
+    usermod -aG docker vagrant
+
+    # Install Docker Compose
+    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$$   (uname -s)-   $$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+
+    # Install Ansible
+    apt-get install -y software-properties-common
+    add-apt-repository --yes --update ppa:ansible/ansible
+    apt-get install -y ansible
+
+    echo "✅ Provisioning initial terminé !"
+    echo "🚀 Prochaine étape : vagrant ssh puis cd /vagrant/ansible"
+  SHELL
+end
