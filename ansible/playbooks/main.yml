@@ -21,6 +21,10 @@
           - python3-docker
           - git
         state: present
+    - name: Install docker-compose python module (required by Ansible)
+      pip:
+        name: docker-compose
+        executable: pip3
 
     - name: Create project directories
       file:
@@ -39,8 +43,8 @@
         dest: "/opt/ctf/{{ item }}/docker-compose.yml"
       loop:
         - ctfd
-        - gitlab
-        - monitoring
+#        - gitlab
+#        - monitoring
 
     - name: Start CTFd
       community.docker.docker_compose:
@@ -49,12 +53,14 @@
 
     - name: Wait for CTFd to be ready
       uri:
-        url: "http://localhost:80"
-        status_code: 200
+        url: "http://localhost:{{ ctfd_port }}"
+        status_code: [200, 302]
+        return_content: no
       register: result
-      until: result.status == 200
+      until: result.status in [200, 302]
       retries: 30
       delay: 10
+
 
     - name: Success message
       debug:

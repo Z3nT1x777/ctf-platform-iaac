@@ -1,13 +1,15 @@
 version: '3.8'
 services:
   ctfd:
-    image: ctfd/ctfd:{{ ctfd_version }}
+    build:
+      context: /vagrant/ansible/docker/ctfd
+    image: ctfd-custom:{{ ctfd_version }}
     container_name: ctfd
     restart: unless-stopped
     ports:
       - "{{ ctfd_port }}:8000"
     environment:
-      - DATABASE_URL=mysql+pymysql://ctfd:ctfd@db/ctfd
+      - DATABASE_URL=mysql+pymysql://{{ DB_USER }}:{{ DB_PASSWORD }}@db/{{ DB_NAME }}
       - REDIS_URL=redis://cache:6379
       - SECRET_KEY=${CTFD_SECRET_KEY}
     volumes:
@@ -25,10 +27,11 @@ services:
     container_name: ctfd_db
     restart: unless-stopped
     environment:
-      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
-      - MYSQL_DATABASE=ctfd
-      - MYSQL_USER=ctfd
-      - MYSQL_PASSWORD=ctfd
+     - MYSQL_ROOT_PASSWORD={{ DB_ROOT_PASSWORD }}
+     - MYSQL_DATABASE={{ DB_NAME }}
+     - MYSQL_USER={{ DB_USER }}
+     - MYSQL_PASSWORD={{ DB_PASSWORD }}
+
     volumes:
       - ./db_data:/var/lib/mysql
     networks:

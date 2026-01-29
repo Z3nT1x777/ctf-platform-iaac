@@ -6,31 +6,31 @@ Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/jammy64"
   config.vm.hostname = "ctf-platform"
 
-  # Network: IP statique pour accès depuis Windows
+  # Network: static IP for access from Windows host
   config.vm.network "private_network", ip: "192.168.56.10"
-  # Port forwarding (backup si private_network échoue)
+  # Port forwarding (backup if private_network fails)
   config.vm.network "forwarded_port", guest: 80, host: 8000   # CTFd
   config.vm.network "forwarded_port", guest: 8080, host: 8080 # GitLab
   config.vm.network "forwarded_port", guest: 3000, host: 3000 # Grafana
 
-  # Resources
+  # VM Resources
   config.vm.provider "virtualbox" do |vb|
     vb.name = "ctf-platform-vm"
-    vb.memory = "8192"  # 8 Go RAM
+    vb.memory = "8192"  # 8 GB RAM
     vb.cpus = 4
-    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"] # enable host DNS resolver
   end
 
   # Shared folder
   config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
 
-  # Provisioning initial (installation de base)
+  # Initial provisioning (base installation)
   config.vm.provision "shell", inline: <<-SHELL
     # Update system
     apt-get update
     apt-get upgrade -y
 
-    # Install essentials
+    # Install basic tools
     apt-get install -y git curl wget vim net-tools
 
     # Install Docker
@@ -47,7 +47,7 @@ Vagrant.configure("2") do |config|
     add-apt-repository --yes --update ppa:ansible/ansible
     apt-get install -y ansible
 
-    echo "✅ Provisioning initial terminé !"
-    echo "🚀 Prochaine étape : vagrant ssh puis cd /vagrant/ansible"
+    echo "✅ Initial provisioning done!"
+    echo "🚀 Next step: vagrant ssh then cd /vagrant/ansible"
   SHELL
 end

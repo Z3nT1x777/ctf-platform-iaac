@@ -1,0 +1,4 @@
+flask<2.3
+flask-babel<3.0
+flask-apscheduler
+docker
